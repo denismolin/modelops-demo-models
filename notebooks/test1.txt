@@ -1,0 +1,11 @@
+ Volume in drive C is OS
+ Volume Serial Number is C0C6-6B21
+
+ Directory of C:\Users\dm250067\OneDrive - Teradata\Documents\01 - Code Development\modelops-demo-models\notebooks
+
+10/13/2023  04:02 PM    <DIR>          .
+10/13/2023  04:02 PM    <DIR>          ..
+10/13/2023  03:55 PM    <DIR>          test.txt
+10/13/2023  04:02 PM                 0 test1.txt
+               1 File(s)              0 bytes
+               3 Dir(s)  519,293,759,488 bytes free
