@@ -3,7 +3,7 @@ from teradataml import (
     copy_to_sql,
     DataFrame,
     OneHotEncodingTransform,
-    DecisionForestPredict,
+    TDDecisionForestPredict,
     TDGLMPredict,
     ScaleTransform,
     ClassificationEvaluator,
@@ -98,14 +98,15 @@ def evaluate(context: ModelContext, **kwargs):
     ).result
     
     print("Scoring")
-    predictions = DecisionForestPredict(object = model,
-                                                newdata = scaled_test,
+    predictions = TDDecisionForestPredict(object = model,
+                                                data = scaled_test,
                                                 id_column = entity_key,                                                        
                                                 terms = [target_name],
                                                 accumulate = [target_name],
                                                 output_prob = True,
                                                 output_responses=["0","1"]
                                                 )
+
     print(predictions)
 
     predicted_data = ConvertTo(
