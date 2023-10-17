@@ -37,15 +37,17 @@ def train(context: ModelContext, **kwargs):
     # read training dataset from Teradata and convert to pandas
     train_df      = DataFrame.from_query(context.dataset_info.sql)
     
-    if 'type' in feature_names:
+    print('feature names :', feature_names)
+    
+    if 'transaction_type' in feature_names:
         print ("OneHotEncoding using InDB Functions...")
         
-        transaction_types = list(train_df[['type','txn_id']].groupby(['type']).count().to_pandas()['type'].values)
+        transaction_types = list(train_df[['transaction_type','txn_id']].groupby(['transaction_type']).count().to_pandas()['transaction_type'].values)
 
 
         onehot = OneHotEncodingFit(data           = train_df,
                                         is_input_dense  = True,
-                                        target_column      = '"type"',
+                                        target_column      = 'transaction_type',
                                         categorical_values = transaction_types,
                                         other_column="other"
                                        )
@@ -58,14 +60,15 @@ def train(context: ModelContext, **kwargs):
         onehot.result.to_sql(f"onehot_${context.model_version}", if_exists="replace")
         print("Saved onehot")
         
-        feature_names_after_one_hot = [c for c in feature_names if c != 'type'] + ['type_'+c for c in transaction_types]
-        category_features = ['type_'+c for c in transaction_types]
+        feature_names_after_one_hot = [c for c in feature_names if c != 'transaction_type'] + ['transaction_type_'+c for c in transaction_types]
+        category_features = ['transaction_type']
     else:
         train_df_onehot = train_df
         feature_names_after_one_hot = feature_names
         category_features = []
     
     print ("Scaling using InDB Functions...")
+    print(feature_names_after_one_hot)
     
     scaler = ScaleFit(
         data           = train_df_onehot,
@@ -104,10 +107,10 @@ def train(context: ModelContext, **kwargs):
     print("Saved trained model")
 
     record_training_stats(
-        train_df_onehot,
-        features    = feature_names_after_one_hot,
+        train_df,
+        features    = feature_names,
         targets     = [target_name],
         categorical = [target_name]+category_features,
-        feature_importance = {f:0 for f in feature_names_after_one_hot},
+        #feature_importance = {f:0 for f in feature_names_after_one_hot},
         context     = context
     )

@@ -3,7 +3,7 @@ from teradataml import (
     copy_to_sql,
     DataFrame,
     OneHotEncodingTransform,
-    TDDecisionForestPredict,
+    DecisionForestPredict,
     TDGLMPredict,
     ScaleTransform,
     ClassificationEvaluator,
@@ -76,12 +76,12 @@ def evaluate(context: ModelContext, **kwargs):
     test_df = DataFrame.from_query(context.dataset_info.sql)
     
     # One hot encoding
-    if 'type' in feature_names:
+    if 'transaction_type' in feature_names:
         print ("Loading onehot...")
         onehot = DataFrame(f"onehot_${context.model_version}")
         onehot_test = OneHotEncodingTransform(data=test_df,
                               object=onehot,
-                              is_input_dense=True)        
+                              is_input_dense=True).result        
     else:
         print ("no onehotencoding")
         onehot_test = test_df
@@ -95,16 +95,18 @@ def evaluate(context: ModelContext, **kwargs):
         data=onehot_test,
         object=scaler,
         accumulate = [target_name,entity_key]
-    )
+    ).result
     
     print("Scoring")
-    predictions = TDDecisionForestPredict(object = model,
+    predictions = DecisionForestPredict(object = model,
                                                 data = scaled_test,
                                                 id_column = entity_key,                                                        
-                                                terms = target_name,
+                                                terms = [target_name],
+                                                accumulate = [target_name],
                                                 output_prob = True,
                                                 output_responses=["0","1"]
                                                 )
+    print(predictions)
 
     predicted_data = ConvertTo(
         data = predictions.result,
@@ -137,32 +139,17 @@ def evaluate(context: ModelContext, **kwargs):
     with open(f"{context.artifact_output_path}/metrics.json", "w+") as f:
         json.dump(evaluation, f)
         
-    cm = confusion_matrix(predicted_data.result.to_pandas()['HasDiabetes'], predicted_data.result.to_pandas()['prediction'])
+    cm = confusion_matrix(predicted_data.result.to_pandas()['isFraud'], predicted_data.result.to_pandas()['prediction'])
     plot_confusion_matrix(cm, f"{context.artifact_output_path}/confusion_matrix")
 
     roc_out = ROC(
         data=predictions.result,
-        probability_column='prob_1',
+        probability_column='prob',
         observation_column=target_name,
         positive_class='1',
         num_thresholds=1000
     )
     plot_roc_curve(roc_out, f"{context.artifact_output_path}/roc_curve")
-
-    # Calculate feature importance and generate plot
-    model_pdf = model.to_pandas()[['predictor','estimate']]
-    predictor_dict = {}
-    
-    for index, row in model_pdf.iterrows():
-        if row['predictor'] in feature_names:
-            value = row['estimate']
-            predictor_dict[row['predictor']] = value
-    
-    feature_importance = dict(sorted(predictor_dict.items(), key=lambda x: x[1], reverse=True))
-    keys, values = zip(*feature_importance.items())
-    norm_values = (values-np.min(values))/(np.max(values)-np.min(values))
-    feature_importance = {keys[i]: float(norm_values[i]*1000) for i in range(len(keys))}
-    plot_feature_importance(feature_importance, f"{context.artifact_output_path}/feature_importance")
 
     predictions_table = "predictions_tmp"
     copy_to_sql(df=predicted_data.result, table_name=predictions_table, index=False, if_exists="replace", temporary=True)
@@ -172,6 +159,6 @@ def evaluate(context: ModelContext, **kwargs):
         record_evaluation_stats(
             features_df=test_df,
             predicted_df=DataFrame.from_query(f"SELECT * FROM {predictions_table}"),
-            feature_importance=feature_importance,
+            #feature_importance=feature_importance,
             context=context
         )

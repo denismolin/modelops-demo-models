@@ -28,12 +28,12 @@ def score(context: ModelContext, **kwargs):
     features_pdf = features_tdf.to_pandas(all_rows=True)
 
     # One hot encoding
-    if 'type' in feature_names:
+    if 'transaction_type' in feature_names:
         print ("Loading onehot...")
         onehot = DataFrame(f"onehot_${context.model_version}")
         onehot_test = OneHotEncodingTransform(data=features_tdf,
                               object=onehot,
-                              is_input_dense=True)        
+                              is_input_dense=True).result        
     else:
         print ("no onehotencoding")
         onehot_test = features_tdf
@@ -51,7 +51,7 @@ def score(context: ModelContext, **kwargs):
     print("Scoring")
     predictions = TDDecisionForestPredict(
         object=model,
-        newdata=scaled_features.result,
+        data=scaled_features.result,
         id_column=entity_key
     )
 
