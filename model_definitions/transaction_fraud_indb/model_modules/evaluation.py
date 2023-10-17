@@ -99,7 +99,7 @@ def evaluate(context: ModelContext, **kwargs):
     
     print("Scoring")
     predictions = DecisionForestPredict(object = model,
-                                                data = scaled_test,
+                                                newdata = scaled_test,
                                                 id_column = entity_key,                                                        
                                                 terms = [target_name],
                                                 accumulate = [target_name],
