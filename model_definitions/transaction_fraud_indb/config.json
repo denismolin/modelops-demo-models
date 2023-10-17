@@ -1,0 +1,15 @@
+{
+   "hyperParameters": {
+        "scale_method":"STD",
+        "miss_value":"KEEP",
+        "global_scale":"False",
+        "multiplier":"1",
+        "intercept":"0",
+        "max_depth": 15, 
+        "num_trees": 72,
+        "min_node_size": 1,
+        "mtry": 6,
+        "mtry_seed": 1,
+        "seed": 1
+   }
+}

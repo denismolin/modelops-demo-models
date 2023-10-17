@@ -1,0 +1,6 @@
+{
+    "id": "f8df0bec-12d1-4d2d-920f-4448503df82e",
+    "name": "Python Fraud Transaction InDB DecisionForest",
+    "description": "Python InDB DecisionForest for Fraud Transaction prediction",
+    "language": "python"
+}
